@@ -193,3 +193,46 @@ def view_completed_jobs():
                 f"Execution Time: {exec_time}s, "
                 f"Priority: {priority}"
             )
+
+
+# Function to exit with confirmation
+def exit_system():
+    confirm = input("Bye? Confirm exit (Y/N): ").strip().lower()
+
+    if confirm == "y":
+        print("Goodbye.")
+        exit()
+    else:
+        print("Exit cancelled.")
+
+# Main menu loop
+def menu():
+    while True:
+        print("\n===== University High Performance Computing Job Scheduler =====")
+        print("1. View pending jobs")
+        print("2. Submit a job request")
+        print("3. Process job queue using Round Robin")
+        print("4. Process job queue using Priority Scheduling")
+        print("5. View completed jobs")
+        print("6. Bye")
+
+        choice = input("Choose an option: ").strip()
+
+        if choice == "1":
+            view_pending_jobs()
+        elif choice == "2":
+            submit_job()
+        elif choice == "3":
+            process_round_robin()
+        elif choice == "4":
+            process_priority()
+        elif choice == "5":
+            view_completed_jobs()
+        elif choice == "6":
+            exit_system()
+        else:
+            print("Invalid option. Please try again.")
+
+# Program entry point
+if __name__ == "__main__":
+    menu()
