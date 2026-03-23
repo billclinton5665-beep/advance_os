@@ -100,3 +100,51 @@ inspect_disk_usage() {
 
     log_action "Inspected disk usage for directory $dir"
 }
+
+
+# Function to archive large .log files
+archive_large_logs() {
+    read -p "Enter directory path to scan for large log files: " dir
+
+    if [ ! -d "$dir" ]; then
+        echo "Directory does not exist."
+        log_action "Invalid directory scanned for log archival: $dir"
+        return
+    fi
+
+    # Create archive directory if it does not already exist
+    mkdir -p "$ARCHIVE_DIR"
+
+    found=0
+
+    # Find all .log files larger than 50MB
+    while IFS= read -r -d '' file; do
+        found=1
+
+        # Get the base name of the file
+        base=$(basename "$file")
+
+        # Add timestamp to archived filename
+        timestamp=$(date '+%Y%m%d_%H%M%S')
+
+        # Compress the file into ArchiveLogs
+        gzip -c "$file" > "$ARCHIVE_DIR/${base}_${timestamp}.gz"
+
+        echo "Archived: $file -> $ARCHIVE_DIR/${base}_${timestamp}.gz"
+        log_action "Archived large log file $file"
+    done < <(find "$dir" -type f -name "*.log" -size +50M -print0)
+
+    if [ $found -eq 0 ]; then
+        echo "No log files larger than 50MB found."
+        log_action "No large log files found in $dir"
+    fi
+
+    # Check size of ArchiveLogs directory in bytes
+    archive_size=$(du -sb "$ARCHIVE_DIR" 2>/dev/null | awk '{print $1}')
+
+    # 1GB = 1073741824 bytes
+    if [ -n "$archive_size" ] && [ "$archive_size" -gt 1073741824 ]; then
+        echo "WARNING: ArchiveLogs exceeds 1GB."
+        log_action "Warning issued: ArchiveLogs exceeds 1GB"
+    fi
+}
