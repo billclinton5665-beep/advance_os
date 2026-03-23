@@ -103,3 +103,27 @@ check_existing_submission() {
 
     echo "No duplicate found."
 }
+
+
+# Function to list all submitted assignments
+list_submissions() {
+    echo "===== Submitted Assignments ====="
+    ls -lh "$SUBMISSION_DIR"
+}
+
+# Function to launch the Python login monitoring system
+simulate_login() {
+    python3 task3_login_monitor.py
+}
+
+# Function to exit with confirmation
+exit_system() {
+    read -p "Bye? Confirm exit (Y/N): " confirm
+
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        echo "Goodbye."
+        exit 0
+    else
+        echo "Exit cancelled."
+    fi
+}
