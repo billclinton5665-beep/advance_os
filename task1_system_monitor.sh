@@ -148,3 +148,28 @@ archive_large_logs() {
         log_action "Warning issued: ArchiveLogs exceeds 1GB"
     fi
 }
+
+
+# Main menu loop
+while true; do
+    echo
+    echo "===== University Data Centre Process and Resource Management System ====="
+    echo "1. Display current CPU and memory usage"
+    echo "2. List top 10 memory consuming processes"
+    echo "3. Terminate a process"
+    echo "4. Inspect disk usage of a directory"
+    echo "5. Detect and archive large log files"
+    echo "6. Bye"
+
+    read -p "Choose an option: " choice
+
+    case $choice in
+        1) show_system_usage ;;
+        2) show_top_processes ;;
+        3) terminate_process ;;
+        4) inspect_disk_usage ;;
+        5) archive_large_logs ;;
+        6) exit_system ;;
+        *) echo "Invalid option. Please try again." ;;
+    esac
+done
