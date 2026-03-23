@@ -12,3 +12,16 @@ CRITICAL_PIDS="1 $$"
 log_action() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
 }
+
+# Function to display current CPU and memory usage
+show_system_usage() {
+    echo "===== Current CPU Usage ====="
+    top -bn1 | grep "Cpu(s)"
+
+    echo
+    echo "===== Current Memory Usage ====="
+    free -h
+
+    log_action "Displayed CPU and memory usage"
+}
+
