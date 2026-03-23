@@ -85,3 +85,18 @@ terminate_process() {
 }
 
 
+# Function to inspect disk usage of a user-provided directory
+inspect_disk_usage() {
+    read -p "Enter directory path to inspect: " dir
+
+    if [ ! -d "$dir" ]; then
+        echo "Directory does not exist."
+        log_action "Invalid directory inspected: $dir"
+        return
+    fi
+
+    echo "===== Disk Usage for $dir ====="
+    du -sh "$dir"
+
+    log_action "Inspected disk usage for directory $dir"
+}
