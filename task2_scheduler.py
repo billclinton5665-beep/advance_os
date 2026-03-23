@@ -23,3 +23,22 @@ def log_event(student_id, job_name, scheduling_type, result):
         )
 
 
+# Function to load pending jobs from file
+def load_jobs():
+    jobs = []
+
+    if os.path.exists(QUEUE_FILE):
+        with open(QUEUE_FILE, "r") as f:
+            for line in f:
+                parts = line.strip().split(",")
+
+                # Each line must have 4 values
+                if len(parts) == 4:
+                    jobs.append({
+                        "student_id": parts[0],
+                        "job_name": parts[1],
+                        "exec_time": int(parts[2]),
+                        "priority": int(parts[3])
+                    })
+
+    return jobs
