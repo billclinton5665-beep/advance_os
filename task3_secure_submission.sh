@@ -127,3 +127,26 @@ exit_system() {
         echo "Exit cancelled."
     fi
 }
+
+
+# Main menu loop
+while true; do
+    echo
+    echo "===== Secure Examination Submission and Access Control System ====="
+    echo "1. Submit an assignment"
+    echo "2. Check if a file has already been submitted"
+    echo "3. List all submitted assignments"
+    echo "4. Simulate login attempt"
+    echo "5. Bye"
+
+    read -p "Choose an option: " choice
+
+    case $choice in
+        1) submit_assignment ;;
+        2) check_existing_submission ;;
+        3) list_submissions ;;
+        4) simulate_login ;;
+        5) exit_system ;;
+        *) echo "Invalid option. Please try again." ;;
+    esac
+done
