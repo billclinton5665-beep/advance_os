@@ -25,3 +25,14 @@ show_system_usage() {
     log_action "Displayed CPU and memory usage"
 }
 
+
+# Function to display the top 10 memory consuming processes
+show_top_processes() {
+    echo "===== Top 10 Memory Consuming Processes ====="
+
+    # ps displays PID, user, CPU%, MEM%, command
+    # --sort=-%mem sorts by memory usage descending
+    ps -eo pid,user,%cpu,%mem,comm --sort=-%mem | head -n 11
+
+    log_action "Displayed top 10 memory consuming processes"
+}
