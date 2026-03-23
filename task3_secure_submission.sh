@@ -1,10 +1,13 @@
-!/bin/bash
+#!/bin/bash
+
+# Resolve script directory so paths are stable regardless of launch location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Directory where accepted assignment files will be stored
-SUBMISSION_DIR="submissions"
+SUBMISSION_DIR="$SCRIPT_DIR/submissions"
 
 # Common log file for both file submissions and login monitoring
-LOG_FILE="submission_log.txt"
+LOG_FILE="$SCRIPT_DIR/submission_log.txt"
 
 # Ensure required directory and log file exist
 mkdir -p "$SUBMISSION_DIR"
@@ -16,15 +19,39 @@ log_action() {
 }
 
 
+# Function to check whether a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+
+# Normalize Windows-style paths (e.g., D:\folder\file.pdf) for Bash checks
+normalize_input_path() {
+    local input_path="$1"
+
+    if command_exists cygpath; then
+        cygpath -u "$input_path" 2>/dev/null || printf '%s' "$input_path"
+    elif [[ "$input_path" =~ ^[A-Za-z]:\\ ]]; then
+        local drive_letter="${input_path:0:1}"
+        local remaining_path="${input_path:2}"
+        remaining_path="${remaining_path//\\//}"
+        printf '/%s/%s' "$(echo "$drive_letter" | tr 'A-Z' 'a-z')" "$remaining_path"
+    else
+        printf '%s' "$input_path"
+    fi
+}
+
+
 # Function to submit an assignment
 submit_assignment() {
     read -p "Enter Student ID: " student_id
-    read -p "Enter file path: " filepath
+    read -r -p "Enter file path: " filepath_raw
+    filepath="$(normalize_input_path "$filepath_raw")"
 
     # Check if file exists
     if [ ! -f "$filepath" ]; then
         echo "File does not exist."
-        log_action "StudentID=$student_id, File=$filepath, Status=Rejected_File_Not_Found"
+        log_action "StudentID=$student_id, File=$filepath_raw, Status=Rejected_File_Not_Found"
         return
     fi
 
@@ -34,7 +61,7 @@ submit_assignment() {
     # Only allow pdf and docx
     if [[ "$ext" != "pdf" && "$ext" != "docx" ]]; then
         echo "Invalid file type. Only .pdf and .docx files are allowed."
-        log_action "StudentID=$student_id, File=$filepath, Status=Rejected_Invalid_Format"
+        log_action "StudentID=$student_id, File=$filepath_raw, Status=Rejected_Invalid_Format"
         return
     fi
 
@@ -44,7 +71,7 @@ submit_assignment() {
     # 5MB = 5242880 bytes
     if [ "$filesize" -gt 5242880 ]; then
         echo "File too large. Maximum size is 5MB."
-        log_action "StudentID=$student_id, File=$filepath, Status=Rejected_File_Too_Large"
+        log_action "StudentID=$student_id, File=$filepath_raw, Status=Rejected_File_Too_Large"
         return
     fi
 
@@ -79,7 +106,8 @@ submit_assignment() {
 
 # Function to check whether a file has already been submitted
 check_existing_submission() {
-    read -p "Enter file path to check: " filepath
+    read -r -p "Enter file path to check: " filepath_raw
+    filepath="$(normalize_input_path "$filepath_raw")"
 
     if [ ! -f "$filepath" ]; then
         echo "File does not exist."
@@ -113,7 +141,17 @@ list_submissions() {
 
 # Function to launch the Python login monitoring system
 simulate_login() {
-    python3 task3_login_monitor.py
+    local venv_python="$SCRIPT_DIR/../.venv/Scripts/python.exe"
+
+    if [ -f "$venv_python" ]; then
+        "$venv_python" "$SCRIPT_DIR/task3_login_monitor.py"
+    elif command_exists python3; then
+        python3 "$SCRIPT_DIR/task3_login_monitor.py"
+    elif command_exists python; then
+        python "$SCRIPT_DIR/task3_login_monitor.py"
+    else
+        echo "Python is not available in this environment."
+    fi
 }
 
 # Function to exit with confirmation
