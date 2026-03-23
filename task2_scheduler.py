@@ -177,3 +177,19 @@ def process_priority():
     print("All jobs processed using Priority Scheduling.")
 
 
+ # Function to display completed jobs
+def view_completed_jobs():
+    if not os.path.exists(COMPLETED_FILE) or os.path.getsize(COMPLETED_FILE) == 0:
+        print("No completed jobs.")
+        return
+
+    print("\n===== Completed Jobs =====")
+    with open(COMPLETED_FILE, "r") as f:
+        for i, line in enumerate(f, 1):
+            student_id, job_name, exec_time, priority = line.strip().split(",")
+            print(
+                f"{i}. Student ID: {student_id}, "
+                f"Job Name: {job_name}, "
+                f"Execution Time: {exec_time}s, "
+                f"Priority: {priority}"
+            )
