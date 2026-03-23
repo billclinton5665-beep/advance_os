@@ -1,8 +1,11 @@
+# Resolve the script directory so output paths are stable regardless of launch location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # File used to store all system administration logs
-LOG_FILE="system_monitor_log.txt"
+LOG_FILE="$SCRIPT_DIR/system_monitor_log.txt"
 
 # Directory where archived log files will be stored
-ARCHIVE_DIR="ArchiveLogs"
+ARCHIVE_DIR="$SCRIPT_DIR/ArchiveLogs"
 
 # Critical PIDs that should not be killed
 # PID 1 is init/systemd, $$ is the current shell script process
@@ -13,14 +16,56 @@ log_action() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
 }
 
+
+# Function to check whether a command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+
+# Function to display CPU usage with Linux and Windows fallbacks
+show_cpu_usage() {
+    if command_exists top; then
+        top -bn1 2>/dev/null | grep "Cpu(s)"
+    elif command_exists powershell; then
+        powershell -NoProfile -Command '(Get-CimInstance Win32_Processor | Measure-Object -Property LoadPercentage -Average).Average | ForEach-Object { "CPU Load: " + $_ + "%" }'
+    else
+        echo "CPU usage command not available in this environment."
+    fi
+}
+
+
+# Function to display memory usage with Linux and Windows fallbacks
+show_memory_usage() {
+    if command_exists free; then
+        free -h
+    elif command_exists powershell; then
+        powershell -NoProfile -Command '$os = Get-CimInstance Win32_OperatingSystem; $total = [math]::Round($os.TotalVisibleMemorySize/1024/1024,2); $free = [math]::Round($os.FreePhysicalMemory/1024/1024,2); $used = [math]::Round($total - $free,2); Write-Output ("Total: " + $total + " GB"); Write-Output ("Used : " + $used + " GB"); Write-Output ("Free : " + $free + " GB")'
+    else
+        echo "Memory usage command not available in this environment."
+    fi
+}
+
+
+# Function to return directory size in bytes with fallback
+get_dir_size_bytes() {
+    local dir="$1"
+
+    if du -sb "$dir" >/dev/null 2>&1; then
+        du -sb "$dir" 2>/dev/null | awk '{print $1}'
+    else
+        du -sk "$dir" 2>/dev/null | awk '{print $1 * 1024}'
+    fi
+}
+
 # Function to display current CPU and memory usage
 show_system_usage() {
     echo "===== Current CPU Usage ====="
-    top -bn1 | grep "Cpu(s)"
+    show_cpu_usage
 
     echo
     echo "===== Current Memory Usage ====="
-    free -h
+    show_memory_usage
 
     log_action "Displayed CPU and memory usage"
 }
@@ -140,13 +185,21 @@ archive_large_logs() {
     fi
 
     # Check size of ArchiveLogs directory in bytes
-    archive_size=$(du -sb "$ARCHIVE_DIR" 2>/dev/null | awk '{print $1}')
+    archive_size=$(get_dir_size_bytes "$ARCHIVE_DIR")
 
     # 1GB = 1073741824 bytes
     if [ -n "$archive_size" ] && [ "$archive_size" -gt 1073741824 ]; then
         echo "WARNING: ArchiveLogs exceeds 1GB."
         log_action "Warning issued: ArchiveLogs exceeds 1GB"
     fi
+}
+
+
+# Function to exit the system cleanly
+exit_system() {
+    echo "Exiting..."
+    log_action "User exited the system monitor"
+    exit 0
 }
 
 
