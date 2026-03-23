@@ -14,3 +14,64 @@ touch "$LOG_FILE"
 log_action() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG_FILE"
 }
+
+
+# Function to submit an assignment
+submit_assignment() {
+    read -p "Enter Student ID: " student_id
+    read -p "Enter file path: " filepath
+
+    # Check if file exists
+    if [ ! -f "$filepath" ]; then
+        echo "File does not exist."
+        log_action "StudentID=$student_id, File=$filepath, Status=Rejected_File_Not_Found"
+        return
+    fi
+
+    # Get file extension
+    ext="${filepath##*.}"
+
+    # Only allow pdf and docx
+    if [[ "$ext" != "pdf" && "$ext" != "docx" ]]; then
+        echo "Invalid file type. Only .pdf and .docx files are allowed."
+        log_action "StudentID=$student_id, File=$filepath, Status=Rejected_Invalid_Format"
+        return
+    fi
+
+    # Get file size in bytes
+    filesize=$(stat -c%s "$filepath")
+
+    # 5MB = 5242880 bytes
+    if [ "$filesize" -gt 5242880 ]; then
+        echo "File too large. Maximum size is 5MB."
+        log_action "StudentID=$student_id, File=$filepath, Status=Rejected_File_Too_Large"
+        return
+    fi
+
+    # Get only the file name
+    filename=$(basename "$filepath")
+
+    # Calculate new file hash for duplicate detection
+    new_hash=$(sha256sum "$filepath" | awk '{print $1}')
+
+    # Compare against files already submitted
+    for existing in "$SUBMISSION_DIR"/*; do
+        [ -e "$existing" ] || break
+
+        existing_name=$(basename "$existing")
+        existing_hash=$(sha256sum "$existing" | awk '{print $1}')
+
+        # Duplicate only if both filename and content match
+        if [ "$filename" == "$existing_name" ] && [ "$new_hash" == "$existing_hash" ]; then
+            echo "Duplicate submission detected. Rejected."
+            log_action "StudentID=$student_id, File=$filename, Status=Rejected_Duplicate"
+            return
+        fi
+    done
+
+    # Copy file into submissions folder
+    cp "$filepath" "$SUBMISSION_DIR/$filename"
+
+    echo "Submission accepted."
+    log_action "StudentID=$student_id, File=$filename, Status=Accepted"
+}
