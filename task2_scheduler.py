@@ -147,3 +147,33 @@ def process_round_robin():
         save_jobs(jobs)
 
     print("All jobs processed using Round Robin.")
+
+
+# Function to process jobs using Priority Scheduling
+def process_priority():
+    jobs = load_jobs()
+
+    if not jobs:
+        print("No jobs to process.")
+        return
+
+    # Highest priority should execute first
+    jobs.sort(key=lambda job: job["priority"], reverse=True)
+
+    print("\n===== Processing with Priority Scheduling =====")
+
+    for job in jobs:
+        print(f"Running {job['job_name']} with priority {job['priority']} for {job['exec_time']} seconds...")
+        
+        # Simulated execution pause
+        time.sleep(1)
+
+        append_completed(job)
+        log_event(job["student_id"], job["job_name"], "Priority", "Completed")
+
+    # Queue becomes empty after all jobs complete
+    save_jobs([])
+
+    print("All jobs processed using Priority Scheduling.")
+
+
