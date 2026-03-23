@@ -97,3 +97,53 @@ def submit_job():
 
     log_event(student_id, job_name, "Submission", "Queued")
     print("Job submitted successfully.")
+
+
+# Function to process jobs using Round Robin scheduling
+def process_round_robin():
+    jobs = load_jobs()
+
+    if not jobs:
+        print("No jobs to process.")
+        return
+
+    print("\n===== Processing with Round Robin =====")
+
+    while jobs:
+        # Get the first job in queue
+        current_job = jobs.pop(0)
+
+        # Job runs for either the full quantum or remaining time
+        run_time = min(TIME_QUANTUM, current_job["exec_time"])
+
+        print(f"Running {current_job['job_name']} for {run_time} seconds...")
+        
+        # Simulated execution pause
+        time.sleep(1)
+
+        # Reduce remaining execution time
+        current_job["exec_time"] -= run_time
+
+        if current_job["exec_time"] > 0:
+            # Put unfinished job back into queue
+            jobs.append(current_job)
+            log_event(
+                current_job["student_id"],
+                current_job["job_name"],
+                "Round Robin",
+                f"Remaining {current_job['exec_time']}s"
+            )
+        else:
+            # If job is complete, add it to completed jobs
+            append_completed(current_job)
+            log_event(
+                current_job["student_id"],
+                current_job["job_name"],
+                "Round Robin",
+                "Completed"
+            )
+
+        # Save updated queue after every cycle
+        save_jobs(jobs)
+
+    print("All jobs processed using Round Robin.")
