@@ -75,3 +75,31 @@ submit_assignment() {
     echo "Submission accepted."
     log_action "StudentID=$student_id, File=$filename, Status=Accepted"
 }
+
+
+# Function to check whether a file has already been submitted
+check_existing_submission() {
+    read -p "Enter file path to check: " filepath
+
+    if [ ! -f "$filepath" ]; then
+        echo "File does not exist."
+        return
+    fi
+
+    filename=$(basename "$filepath")
+    new_hash=$(sha256sum "$filepath" | awk '{print $1}')
+
+    for existing in "$SUBMISSION_DIR"/*; do
+        [ -e "$existing" ] || break
+
+        existing_name=$(basename "$existing")
+        existing_hash=$(sha256sum "$existing" | awk '{print $1}')
+
+        if [ "$filename" == "$existing_name" ] && [ "$new_hash" == "$existing_hash" ]; then
+            echo "This file has already been submitted."
+            return
+        fi
+    done
+
+    echo "No duplicate found."
+}
