@@ -100,3 +100,8 @@ def simulate_login():
 
     data[student_id] = user
     save_data(data)
+
+
+# Program entry point
+if __name__ == "__main__":
+    simulate_login()
