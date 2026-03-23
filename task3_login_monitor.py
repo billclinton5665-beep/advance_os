@@ -16,3 +16,19 @@ LOCK_THRESHOLD = 3
 
 # Time window in seconds for suspicious repeated attempts
 SUSPICIOUS_WINDOW = 60
+
+
+# Function to load student login data from JSON file
+def load_data():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            try:
+                return json.load(f)
+            except json.JSONDecodeError:
+                return {}
+    return {}
+
+# Function to save student login data back to JSON
+def save_data(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=4)
