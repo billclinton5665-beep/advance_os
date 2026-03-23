@@ -72,3 +72,28 @@ def view_pending_jobs():
             f"Execution Time: {job['exec_time']}s, "
             f"Priority: {job['priority']}"
         )
+
+
+# Function to submit a new job
+def submit_job():
+    student_id = input("Enter Student ID: ").strip()
+    job_name = input("Enter Job Name: ").strip()
+
+    try:
+        exec_time = int(input("Enter Estimated Execution Time (seconds): ").strip())
+        priority = int(input("Enter Priority (1-10): ").strip())
+
+        # Validate input values
+        if exec_time <= 0 or not (1 <= priority <= 10):
+            raise ValueError
+
+    except ValueError:
+        print("Invalid execution time or priority.")
+        return
+
+    # Save the job to the queue file
+    with open(QUEUE_FILE, "a") as f:
+        f.write(f"{student_id},{job_name},{exec_time},{priority}\n")
+
+    log_event(student_id, job_name, "Submission", "Queued")
+    print("Job submitted successfully.")
