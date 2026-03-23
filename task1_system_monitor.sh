@@ -58,6 +58,36 @@ get_dir_size_bytes() {
     fi
 }
 
+
+# Function to check process existence with Linux and Windows fallbacks
+process_exists() {
+    local pid="$1"
+
+    if ps -p "$pid" >/dev/null 2>&1; then
+        return 0
+    elif command_exists powershell; then
+        powershell -NoProfile -Command "if (Get-Process -Id $pid -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" >/dev/null 2>&1
+        return $?
+    else
+        return 1
+    fi
+}
+
+
+# Function to terminate a process with Linux and Windows fallbacks
+terminate_pid() {
+    local pid="$1"
+
+    if kill "$pid" >/dev/null 2>&1; then
+        return 0
+    elif command_exists powershell; then
+        powershell -NoProfile -Command "try { Stop-Process -Id $pid -Force -ErrorAction Stop; exit 0 } catch { exit 1 }" >/dev/null 2>&1
+        return $?
+    else
+        return 1
+    fi
+}
+
 # Function to display current CPU and memory usage
 show_system_usage() {
     echo "===== Current CPU Usage ====="
@@ -75,9 +105,15 @@ show_system_usage() {
 show_top_processes() {
     echo "===== Top 10 Memory Consuming Processes ====="
 
-    # ps displays PID, user, CPU%, MEM%, command
-    # --sort=-%mem sorts by memory usage descending
-    ps -eo pid,user,%cpu,%mem,comm --sort=-%mem | head -n 11
+    # Prefer GNU/Linux ps output when available.
+    if ps -eo pid,user,%cpu,%mem,comm --sort=-%mem >/dev/null 2>&1; then
+        ps -eo pid,user,%cpu,%mem,comm --sort=-%mem | head -n 11
+    # Fallback for Windows/Git Bash environments where ps options differ.
+    elif command_exists powershell; then
+        powershell -NoProfile -Command 'Get-Process | Sort-Object WorkingSet64 -Descending | Select-Object -First 10 @{Name="PID";Expression={$_.Id}}, @{Name="Name";Expression={$_.ProcessName}}, @{Name="MemoryMB";Expression={[math]::Round($_.WorkingSet64/1MB,2)}} | Format-Table -AutoSize'
+    else
+        echo "Cannot list top memory processes in this environment."
+    fi
 
     log_action "Displayed top 10 memory consuming processes"
 }
@@ -95,7 +131,7 @@ terminate_process() {
     fi
 
     # Check if PID exists
-    if ! ps -p "$pid" > /dev/null 2>&1; then
+    if ! process_exists "$pid"; then
         echo "Process does not exist."
         log_action "Attempted termination of non-existent PID: $pid"
         return
@@ -114,9 +150,7 @@ terminate_process() {
     read -p "Are you sure you want to terminate PID $pid? (Y/N): " confirm
 
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        kill "$pid" 2>/dev/null
-
-        if [ $? -eq 0 ]; then
+        if terminate_pid "$pid"; then
             echo "Process $pid terminated successfully."
             log_action "Terminated process PID $pid"
         else

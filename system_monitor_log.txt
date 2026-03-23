@@ -1,1 +1,18 @@
 [2026-03-23 12:43:36] User exited the system monitor
+[2026-03-23 13:12:27] Displayed CPU and memory usage
+[2026-03-23 13:12:59] Displayed top 10 memory consuming processes
+[2026-03-23 13:13:05] User exited the system monitor
+[2026-03-23 13:13:34] Displayed top 10 memory consuming processes
+[2026-03-23 13:13:34] User exited the system monitor
+[2026-03-23 13:14:34] User exited the system monitor
+[2026-03-23 13:15:36] Attempted termination of non-existent PID: 14288
+[2026-03-23 13:16:26] Attempted termination of non-existent PID: 12
+[2026-03-23 13:16:31] Displayed top 10 memory consuming processes
+[2026-03-23 13:16:49] Attempted termination of non-existent PID: 4368
+[2026-03-23 13:17:04] Attempted termination of non-existent PID: 11060
+[2026-03-23 13:17:08] Displayed top 10 memory consuming processes
+[2026-03-23 13:19:54] Cancelled termination of PID 5908
+[2026-03-23 13:19:54] User exited the system monitor
+[2026-03-23 13:20:36] Displayed top 10 memory consuming processes
+[2026-03-23 13:20:49] Cancelled termination of PID 14288
+[2026-03-23 13:21:32] User exited the system monitor
